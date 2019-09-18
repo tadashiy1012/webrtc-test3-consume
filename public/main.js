@@ -10,6 +10,7 @@ ws.onopen = () => {
     (async () => {
         pc.createDataChannel('chat');
         await pc.setLocalDescription(await pc.createOffer());
+        console.log('create and set local desc');
     })();
 };
 ws.onmessage = (ev) => {
@@ -17,13 +18,33 @@ ws.onmessage = (ev) => {
     if (data.id && data.id !== id) {
         console.log(ev);
         if (data.toId && data.toId === id) {
-            (async () => {
+            if (data.candidate) {
+                console.log('find candidate');
+                const candidate = new RTCIceCandidate({
+                    candidate: data.candidate.candidate,
+                    sdpMLineIndex: data.candidate.sdpMLineIndex,
+                    sdpMid: data.candidate.sdpMid
+                });
                 const answer = new RTCSessionDescription({
                     type: 'answer',
-                    sdp: data.answer.sdp
+                    sdp: data.sdp
                 });
-                await pc.setRemoteDescription(answer);
-            })();
+                (async () => {
+                    if (!pc.remoteDescription) {
+                        await pc.setRemoteDescription(answer);
+                    }
+                    await pc.addIceCandidate(candidate);
+                })();
+            } else if (data.answer) {
+                console.log('find answer');
+                (async () => {
+                    const answer = new RTCSessionDescription({
+                        type: 'answer',
+                        sdp: data.answer.sdp
+                    });
+                    await pc.setRemoteDescription(answer);
+                })();
+            }
         }
     }
 };
@@ -36,6 +57,7 @@ pc.onicecandidate = (ev) => {
     const sdp = pc.localDescription.sdp;
     const json = {id, candidate: ev.candidate, sdp, to: 'default@890'};
     ws.send(JSON.stringify(json));
+    console.log('send ice candidate');
 };
 pc.onicegatheringstatechange = (ev) => {
     console.log(ev.currentTarget.iceGatheringState)
@@ -56,3 +78,6 @@ console.log(pc);
 
 const statusElm = document.getElementById('status');
 statusElm.innerHTML = "new";
+
+const idElm = document.getElementById('id');
+idElm.innerHTML = id;
