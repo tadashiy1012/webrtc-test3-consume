@@ -42,8 +42,10 @@ pc.onicegatheringstatechange = (ev) => {
     const label = 'timer1';
     if (ev.currentTarget.iceGatheringState === 'gathering') {
         console.time(label);
+        statusElm.innerHTML = "gathering";
     } else if (ev.currentTarget.iceGatheringState === 'complete') {
         console.timeEnd(label);
+        statusElm.innerHTML = "complete";
     }
 };
 pc.ondatachannel = (ev) => {
@@ -51,3 +53,6 @@ pc.ondatachannel = (ev) => {
 };
 
 console.log(pc);
+
+const statusElm = document.getElementById('status');
+statusElm.innerHTML = "new";
