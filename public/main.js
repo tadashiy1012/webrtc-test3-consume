@@ -9,14 +9,17 @@ ws.onopen = () => {
     ws.send(JSON.stringify(auth));
     (async () => {
         pc.createDataChannel('chat');
-        await pc.setLocalDescription(await pc.createOffer());
-        console.log('create and set local desc');
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer);
+        console.log('create offer');
+        const json = {id, offer: offer.sdp, to: 'default@890'};
+        ws.send(JSON.stringify(json));
     })();
 };
 ws.onmessage = (ev) => {
     const data = JSON.parse(ev.data);
     if (data.id && data.id !== id) {
-        console.log(ev);
+        console.log(ev, data);
         if (data.toId && data.toId === id) {
             if (data.candidate) {
                 console.log('find candidate');
@@ -54,8 +57,7 @@ const pc = new RTCPeerConnection({
 });
 pc.onicecandidate = (ev) => {
     console.log(ev);
-    const sdp = pc.localDescription.sdp;
-    const json = {id, candidate: ev.candidate, sdp, to: 'default@890'};
+    const json = {id, candidate: ev.candidate, to: 'default@890'};
     ws.send(JSON.stringify(json));
     console.log('send ice candidate');
 };
