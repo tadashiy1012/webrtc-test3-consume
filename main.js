@@ -21,24 +21,7 @@ ws.onmessage = (ev) => {
     if (data.id && data.id !== id) {
         console.log(ev, data);
         if (data.toId && data.toId === id) {
-            if (data.candidate) {
-                console.log('find candidate');
-                const candidate = new RTCIceCandidate({
-                    candidate: data.candidate.candidate,
-                    sdpMLineIndex: data.candidate.sdpMLineIndex,
-                    sdpMid: data.candidate.sdpMid
-                });
-                const answer = new RTCSessionDescription({
-                    type: 'answer',
-                    sdp: data.sdp
-                });
-                (async () => {
-                    if (!pc.remoteDescription) {
-                        await pc.setRemoteDescription(answer);
-                    }
-                    await pc.addIceCandidate(candidate);
-                })();
-            } else if (data.answer) {
+            if (data.answer) {
                 console.log('find answer');
                 (async () => {
                     const answer = new RTCSessionDescription({
@@ -47,7 +30,17 @@ ws.onmessage = (ev) => {
                     });
                     await pc.setRemoteDescription(answer);
                 })();
-            }
+            } else if (data.candidate) {
+                console.log('find candidate');
+                const candidate = new RTCIceCandidate({
+                    candidate: data.candidate.candidate,
+                    sdpMLineIndex: data.candidate.sdpMLineIndex,
+                    sdpMid: data.candidate.sdpMid
+                });
+                (async () => {
+                    await pc.addIceCandidate(candidate);
+                })();
+            }  
         }
     }
 };
